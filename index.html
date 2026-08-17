@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>顺远医药 - 登录</title>
+    <style>
+        /* 基础样式重置 */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body, html { height: 100%; font-family: 'Microsoft YaHei', 'Segoe UI', sans-serif; background-color: #f0f2f5; }
+
+        /* 主容器，采用左右布局 */
+        .login-container {
+            display: flex; width: 100%; height: 100%; max-width: 1000px; margin: 0 auto;
+            background-color: #fff; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        /* 左侧品牌展示区 */
+        .login-brand {
+            flex: 1; background: linear-gradient(135deg, #2a9d8f 0%, #264653 100%); color: #fff;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            padding: 40px; text-align: center;
+        }
+        .login-brand h1 { font-size: 2.5em; margin-bottom: 20px; font-weight: 300; }
+        .login-brand p { font-size: 1.1em; opacity: 0.9; }
+
+        /* 右侧登录表单区 */
+        .login-form-wrapper {
+            flex: 1; padding: 60px 40px; display: flex; flex-direction: column; justify-content: center;
+        }
+        .login-form-wrapper h2 { color: #333; margin-bottom: 30px; font-size: 1.8em; font-weight: 500; }
+
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; color: #555; font-size: 0.9em; }
+        .form-group input {
+            width: 100%; padding: 12px 15px; border: 1px solid #ddd; border-radius: 4px;
+            font-size: 1em; transition: border-color 0.3s ease;
+        }
+        .form-group input:focus { outline: none; border-color: #2a9d8f; box-shadow: 0 0 0 2px rgba(42, 157, 143, 0.2); }
+
+        /* 滑块验证码样式 */
+        .slider-captcha { position: relative; width: 100%; height: 40px; background-color: #f0f0f0; border-radius: 4px; user-select: none; margin-bottom: 20px; }
+        .slider-captcha-bg { position: absolute; top: 0; left: 0; height: 100%; background-color: #2a9d8f; border-radius: 4px 0 0 4px; width: 0; transition: background-color 0.3s; }
+        .slider-captcha-handle {
+            position: absolute; top: 0; left: 0; width: 40px; height: 40px; background-color: #fff;
+            border: 1px solid #ddd; border-radius: 4px; cursor: pointer;
+            display: flex; justify-content: center; align-items: center; transition: background-color 0.3s;
+        }
+        .slider-captcha-handle::before { content: '→'; color: #999; font-size: 1.2em; }
+        .slider-captcha-text { position: absolute; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; color: #666; font-size: 0.9em; pointer-events: none; }
+
+        /* 登录按钮 */
+        .login-btn {
+            width: 100%; padding: 14px; background-color: #2a9d8f; color: #fff; border: none;
+            border-radius: 4px; font-size: 1em; cursor: pointer; transition: background-color 0.3s ease;
+        }
+        .login-btn:hover { background-color: #21867a; }
+        .login-btn:disabled { background-color: #ccc; cursor: not-allowed; }
+
+        /* 提示信息样式 */
+        .message-box {
+            margin-top: 15px; padding: 10px; border-radius: 4px; text-align: center;
+            font-size: 0.9em; display: none;
+        }
+        .msg-error { background-color: #fff2f0; border: 1px solid #ffccc7; color: #ff4d4f; }
+        .msg-success { background-color: #f6ffed; border: 1px solid #b7eb8f; color: #52c41a; }
+
+        .form-footer { margin-top: 20px; text-align: right; }
+        .form-footer a { color: #2a9d8f; text-decoration: none; font-size: 0.9em; }
+        .form-footer a:hover { text-decoration: underline; }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .login-container { flex-direction: column; max-width: 400px; }
+            .login-brand { display: none; }
+            .login-form-wrapper { padding: 40px 20px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="login-container">
+        <!-- 左侧品牌区 -->
+        <div class="login-brand">
+            <h1>顺远医药</h1>
+            <p>高效、安全、智能的医药管理解决方案</p>
+        </div>
+
+        <!-- 右侧登录区 -->
+        <div class="login-form-wrapper">
+            <h2>欢迎登录</h2>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="username">用户名</label>
+                    <input type="text" id="username" name="username" placeholder="请输入用户名" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">密码</label>
+                    <input type="password" id="password" name="password" placeholder="请输入密码" required>
+                </div>
+                
+                <!-- 滑块验证码 -->
+                <div class="form-group">
+                    <label>安全验证</label>
+                    <div class="slider-captcha" id="sliderCaptcha">
+                        <div class="slider-captcha-bg" id="sliderBg"></div>
+                        <div class="slider-captcha-handle" id="sliderHandle"></div>
+                        <div class="slider-captcha-text" id="sliderText">请按住滑块，拖动到指定位置</div>
+                    </div>
+                </div>
+
+                <button type="submit" class="login-btn" id="loginBtn" disabled>登 录</button>
+                
+                <!-- 动态提示信息区域 -->
+                <div id="messageBox" class="message-box"></div>
+
+                <div class="form-footer">
+                    <a href="forgot-password.html">忘记密码？</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // 获取DOM元素
+        const sliderCaptcha = document.getElementById('sliderCaptcha');
+        const sliderHandle = document.getElementById('sliderHandle');
+        const sliderBg = document.getElementById('sliderBg');
+        const sliderText = document.getElementById('sliderText');
+        const loginBtn = document.getElementById('loginBtn');
+        const loginForm = document.getElementById('loginForm');
+        const messageBox = document.getElementById('messageBox');
+
+        let isVerified = false;
+        let isDragging = false;
+        let startX = 0;
+
+        // 显示提示信息
+        function showMessage(text, type) {
+            messageBox.textContent = text;
+            messageBox.className = `message-box ${type === 'error' ? 'msg-error' : 'msg-success'}`;
+            messageBox.style.display = 'block';
+        }
+
+        // 重置滑块
+        function resetSlider() {
+            isVerified = false;
+            sliderHandle.style.left = '0';
+            sliderBg.style.width = '0';
+            sliderHandle.innerHTML = '→';
+            sliderHandle.style.backgroundColor = '#fff';
+            sliderHandle.style.borderColor = '#ddd';
+            sliderHandle.style.color = '#999';
+            sliderText.textContent = '请按住滑块，拖动到指定位置';
+            sliderText.style.color = '#666';
+            loginBtn.disabled = true;
+        }
+
+        // 滑块验证码逻辑
+        sliderHandle.addEventListener('mousedown', (e) => {
+            if (isVerified) return;
+            isDragging = true;
+            startX = e.clientX - sliderHandle.getBoundingClientRect().left;
+            document.body.style.userSelect = 'none'; 
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isDragging || isVerified) return;
+            const containerWidth = sliderCaptcha.offsetWidth;
+            let moveX = e.clientX - sliderCaptcha.getBoundingClientRect().left - startX;
+            moveX = Math.max(0, Math.min(moveX, containerWidth - sliderHandle.offsetWidth));
+            sliderHandle.style.left = moveX + 'px';
+            sliderBg.style.width = (moveX + sliderHandle.offsetWidth) + 'px';
+        });
+
+        document.addEventListener('mouseup', () => {
+            if (!isDragging) return;
+            isDragging = false;
+            document.body.style.userSelect = 'auto';
+
+            const containerWidth = sliderCaptcha.offsetWidth;
+            const handlePosition = parseInt(sliderHandle.style.left);
+
+            if (handlePosition >= containerWidth - sliderHandle.offsetWidth - 5) {
+                isVerified = true;
+                sliderHandle.innerHTML = '✔';
+                sliderHandle.style.backgroundColor = '#2a9d8f';
+                sliderHandle.style.borderColor = '#2a9d8f';
+                sliderHandle.style.color = '#fff';
+                sliderBg.style.backgroundColor = '#2a9d8f';
+                sliderText.textContent = '验证通过';
+                sliderText.style.color = '#2a9d8f';
+                loginBtn.disabled = false;
+            } else {
+                resetSlider();
+            }
+        });
+
+        // 处理登录提交
+        loginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            if (!isVerified) return;
+
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            // 模拟后端接口请求
+            loginBtn.disabled = true;
+            loginBtn.textContent = '登录中...';
+            messageBox.style.display = 'none';
+
+            setTimeout(() => {
+                // 模拟后端返回：假设 admin/123456 有权限，其他账号无权限
+                if (username === 'admin' && password === '123456') {
+                    showMessage('登录成功，正在跳转...', 'success');
+                    // 实际项目中这里会跳转：window.location.href = '/dashboard';
+                } else {
+                    showMessage('⚠️ 访问受限：当前账号无权限或密码错误，请联系管理员！', 'error');
+                    resetSlider(); // 登录失败重置滑块
+                }
+                loginBtn.disabled = false;
+                loginBtn.textContent = '登 录';
+            }, 1000); // 模拟1秒网络延迟
+        });
+    </script>
+</body>
+</html>
